@@ -35,11 +35,15 @@ fn get_s(y: f64, v: [f64; 2], d: [f64; 2]) -> f64 {
 
 trait PolygonInterface {
     fn vertices(&self) -> &[[f64; 2]];
+    fn vertices_mut(&mut self) -> &mut [[f64; 2]];
 }
 
 impl PolygonInterface for Triangle {
     fn vertices(&self) -> &[[f64; 2]] {
         &self.vertices
+    }
+    fn vertices_mut(&mut self) -> &mut [[f64; 2]] {
+        &mut self.vertices
     }
 }
 
@@ -47,9 +51,19 @@ impl PolygonInterface for Polygon {
     fn vertices(&self) -> &[[f64; 2]] {
         &self.vertices
     }
+    fn vertices_mut(&mut self) -> &mut [[f64; 2]] {
+        &mut self.vertices
+    }
 }
 
-fn fill_triangle(board: &mut Board, shape: Shape, poly: &impl PolygonInterface, outline: bool) {
+fn scale(poly: &mut impl PolygonInterface, scale: f64) {
+    for v in poly.vertices_mut() {
+        v[0] *= scale;
+        v[1] *= scale;
+    }
+}
+
+fn fill_polygon(board: &mut Board, shape: Shape, poly: &impl PolygonInterface, outline: bool) {
     let vertices = poly.vertices();
     let bbox = [
         vertices
@@ -124,30 +138,51 @@ fn print_board(board: &Board, shape: Shape) {
 fn main() {
     let mut args = std::env::args();
     args.next();
-    let shape = (64, 35);
-    let mut board = vec![false; shape.0 * shape.1];
 
+    let mut shape = (64, 35);
     let mut poly = false;
     let mut outline = false;
+    let mut noprint = false;
     while let Some(arg) = args.next() {
         match &arg as &str {
             "poly" => poly = true,
             "outline" => outline = true,
-            _ => (),
+            "noprint" => noprint = true,
+            _ => {
+                if let Ok(size) = arg.parse() {
+                    shape = (size, size);
+                } else {
+                    println!("Unknown command line argument: {arg}");
+                }
+            }
         }
     }
 
+    let mut board = vec![false; shape.0 * shape.1];
+
     if poly {
-        let poly = Polygon {
+        let mut poly = Polygon {
             vertices: vec![[30., 5.], [10., 20.], [15., 30.], [50., 25.]],
         };
-        fill_triangle(&mut board, shape, &poly, outline);
+        scale(&mut poly, shape.0 as f64 / 64.);
+        let (_, time) = measure_time(|| fill_polygon(&mut board, shape, &poly, outline));
+        println!("Fill triangle time: {}ms", time * 1e3);
     } else {
-        let tri = Triangle {
+        let mut tri = Triangle {
             vertices: [[30., 5.], [10., 20.], [50., 30.]],
         };
-        fill_triangle(&mut board, shape, &tri, outline);
+        scale(&mut tri, shape.0 as f64 / 64.);
+        let (_, time) = measure_time(|| fill_polygon(&mut board, shape, &tri, outline));
+        println!("Fill triangle time: {}ms", time * 1e3);
     }
 
-    print_board(&board, shape);
+    if !noprint {
+        print_board(&board, shape);
+    }
+}
+
+fn measure_time<T>(f: impl FnOnce() -> T) -> (T, f64) {
+    let start = std::time::Instant::now();
+    let ret = f();
+    (ret, start.elapsed().as_secs_f64())
 }
