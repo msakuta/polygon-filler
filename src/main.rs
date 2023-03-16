@@ -1,5 +1,3 @@
-
-
 struct Triangle {
     vertices: [[f64; 2]; 3],
 }
@@ -54,10 +52,26 @@ impl PolygonInterface for Polygon {
 fn fill_triangle(board: &mut Board, shape: Shape, poly: &impl PolygonInterface, outline: bool) {
     let vertices = poly.vertices();
     let bbox = [
-        vertices.iter().map(|pos| pos[0]).reduce(|acc, cur| acc.min(cur)).unwrap(),
-        vertices.iter().map(|pos| pos[1]).reduce(|acc, cur| acc.min(cur)).unwrap(),
-        vertices.iter().map(|pos| pos[0]).reduce(|acc, cur| acc.max(cur)).unwrap(),
-        vertices.iter().map(|pos| pos[1]).reduce(|acc, cur| acc.max(cur)).unwrap(),
+        vertices
+            .iter()
+            .map(|pos| pos[0])
+            .reduce(|acc, cur| acc.min(cur))
+            .unwrap(),
+        vertices
+            .iter()
+            .map(|pos| pos[1])
+            .reduce(|acc, cur| acc.min(cur))
+            .unwrap(),
+        vertices
+            .iter()
+            .map(|pos| pos[0])
+            .reduce(|acc, cur| acc.max(cur))
+            .unwrap(),
+        vertices
+            .iter()
+            .map(|pos| pos[1])
+            .reduce(|acc, cur| acc.max(cur))
+            .unwrap(),
     ];
 
     // println!("bbox: {bbox:?}");
@@ -112,19 +126,28 @@ fn main() {
     args.next();
     let shape = (64, 35);
     let mut board = vec![false; shape.0 * shape.1];
-    match args.next().as_ref().map(|s| s as &str) {
-        Some("poly") => {
-            let poly = Polygon {
-                vertices: vec![[30., 5.], [10., 20.], [15., 30.], [50., 25.]],
-            };
-            fill_triangle(&mut board, shape, &poly, false);
-        }
-        _ => {
-            let tri = Triangle {
-                vertices: [[30., 5.], [10., 20.], [50., 30.]],
-            };
-            fill_triangle(&mut board, shape, &tri, false);
+
+    let mut poly = false;
+    let mut outline = false;
+    while let Some(arg) = args.next() {
+        match &arg as &str {
+            "poly" => poly = true,
+            "outline" => outline = true,
+            _ => (),
         }
     }
+
+    if poly {
+        let poly = Polygon {
+            vertices: vec![[30., 5.], [10., 20.], [15., 30.], [50., 25.]],
+        };
+        fill_triangle(&mut board, shape, &poly, outline);
+    } else {
+        let tri = Triangle {
+            vertices: [[30., 5.], [10., 20.], [50., 30.]],
+        };
+        fill_triangle(&mut board, shape, &tri, outline);
+    }
+
     print_board(&board, shape);
 }
