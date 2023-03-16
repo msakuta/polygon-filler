@@ -145,6 +145,17 @@ fn main() {
     let mut noprint = false;
     while let Some(arg) = args.next() {
         match &arg as &str {
+            "help" => {
+                eprintln!(
+                    "Options:
+    help      this help
+    poly      render a polygon instead of a triangle
+    outline   render outline of the shape instead of fill
+    noprint   suppress print output
+    <integer> set the canvas size in pixels"
+                );
+                return;
+            }
             "poly" => poly = true,
             "outline" => outline = true,
             "noprint" => noprint = true,
