@@ -49,19 +49,20 @@ fn fill_triangle(board: &mut Board, shape: Shape, tri: &Triangle, outline: bool)
             if d[1] == 0. {
                 continue;
             }
-            let t0 = get_t(y as f64, tri.vertices[i], normalize(d));
-            // println!("y: {y} t0: {t0}");
-            if t0 < 0. || length(d) < t0 {
+            let t = get_t(y as f64, tri.vertices[i], normalize(d));
+            // println!("y: {y} t: {t} / {d}", d = length(d));
+            if t < 0. || length(d) < t {
                 continue;
             }
             let x = get_s(y as f64, tri.vertices[i], normalize(d)).round();
+            // println!("    x: {x}");
             if x < 0. || shape.0 as f64 <= x {
                 continue;
             }
             let x = x as usize;
             if outline {
                 board[x + y * shape.0] = true;
-            } else {
+            } else if intersects.last() != Some(&x) {
                 intersects.push(x);
             }
         }
