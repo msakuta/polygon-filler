@@ -4,6 +4,10 @@ struct Triangle {
     vertices: [[f64; 2]; 3],
 }
 
+struct Polygon {
+    vertices: Vec<[f64; 2]>,
+}
+
 type Board = Vec<bool>;
 type Shape = (usize, usize);
 
@@ -31,30 +35,47 @@ fn get_s(y: f64, v: [f64; 2], d: [f64; 2]) -> f64 {
     (y - v[1]) * d[0] / d[1] + v[0]
 }
 
+trait PolygonInterface {
+    fn vertices(&self) -> &[[f64; 2]];
+}
 
-fn fill_triangle(board: &mut Board, shape: Shape, tri: &Triangle, outline: bool) {
+impl PolygonInterface for Triangle {
+    fn vertices(&self) -> &[[f64; 2]] {
+        &self.vertices
+    }
+}
+
+impl PolygonInterface for Polygon {
+    fn vertices(&self) -> &[[f64; 2]] {
+        &self.vertices
+    }
+}
+
+fn fill_triangle(board: &mut Board, shape: Shape, poly: &impl PolygonInterface, outline: bool) {
+    let vertices = poly.vertices();
     let bbox = [
-        tri.vertices.iter().map(|pos| pos[0]).reduce(|acc, cur| acc.min(cur)).unwrap(),
-        tri.vertices.iter().map(|pos| pos[1]).reduce(|acc, cur| acc.min(cur)).unwrap(),
-        tri.vertices.iter().map(|pos| pos[0]).reduce(|acc, cur| acc.max(cur)).unwrap(),
-        tri.vertices.iter().map(|pos| pos[1]).reduce(|acc, cur| acc.max(cur)).unwrap(),
+        vertices.iter().map(|pos| pos[0]).reduce(|acc, cur| acc.min(cur)).unwrap(),
+        vertices.iter().map(|pos| pos[1]).reduce(|acc, cur| acc.min(cur)).unwrap(),
+        vertices.iter().map(|pos| pos[0]).reduce(|acc, cur| acc.max(cur)).unwrap(),
+        vertices.iter().map(|pos| pos[1]).reduce(|acc, cur| acc.max(cur)).unwrap(),
     ];
 
     // println!("bbox: {bbox:?}");
 
     for y in usize(bbox[1])..=usize(bbox[3]) {
         let mut intersects = vec![];
-        for (i, i1) in [0, 1, 2].into_iter().zip([1, 2, 0].into_iter()) {
-            let d = vecsub(tri.vertices[i1], tri.vertices[i]);
+        for i in 0..vertices.len() {
+            let i1 = (i + 1) % vertices.len();
+            let d = vecsub(vertices[i1], vertices[i]);
             if d[1] == 0. {
                 continue;
             }
-            let t = get_t(y as f64, tri.vertices[i], normalize(d));
+            let t = get_t(y as f64, vertices[i], normalize(d));
             // println!("y: {y} t: {t} / {d}", d = length(d));
             if t < 0. || length(d) < t {
                 continue;
             }
-            let x = get_s(y as f64, tri.vertices[i], normalize(d)).round();
+            let x = get_s(y as f64, vertices[i], normalize(d)).round();
             // println!("    x: {x}");
             if x < 0. || shape.0 as f64 <= x {
                 continue;
@@ -87,11 +108,23 @@ fn print_board(board: &Board, shape: Shape) {
 }
 
 fn main() {
-    let tri = Triangle {
-        vertices: [[30., 5.], [10., 20.], [50., 30.]],
-    };
+    let mut args = std::env::args();
+    args.next();
     let shape = (64, 35);
     let mut board = vec![false; shape.0 * shape.1];
-    fill_triangle(&mut board, shape, &tri, false);
+    match args.next().as_ref().map(|s| s as &str) {
+        Some("poly") => {
+            let poly = Polygon {
+                vertices: vec![[30., 5.], [10., 20.], [15., 30.], [50., 25.]],
+            };
+            fill_triangle(&mut board, shape, &poly, false);
+        }
+        _ => {
+            let tri = Triangle {
+                vertices: [[30., 5.], [10., 20.], [50., 30.]],
+            };
+            fill_triangle(&mut board, shape, &tri, false);
+        }
+    }
     print_board(&board, shape);
 }
