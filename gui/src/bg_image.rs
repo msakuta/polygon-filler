@@ -14,7 +14,7 @@ impl BgImage {
         Self { texture: None }
     }
 
-    pub fn _clear(&mut self) {
+    pub fn clear(&mut self) {
         self.texture.take();
     }
 
@@ -22,8 +22,8 @@ impl BgImage {
         &mut self,
         response: &Response,
         painter: &Painter,
-        app_data: &T,
-        img_getter: impl Fn(&T) -> ColorImage,
+        app_data: T,
+        img_getter: impl Fn(T) -> ColorImage,
     ) {
         let texture: &TextureHandle = self.texture.get_or_insert_with(|| {
             let image = img_getter(app_data);
@@ -43,9 +43,11 @@ impl BgImage {
             response.rect,
         );
 
+        let texsize = texture.size();
+
         let rect = Rect {
             min: Pos2::new(0., 0.),
-            max: Pos2::new(512., 512.),
+            max: Pos2::new(texsize[0] as f32, texsize[1] as f32),
         };
         const UV: Rect = Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0));
         painter.image(
