@@ -2,6 +2,18 @@
 
 A super simple polygon rasterizer in Rust
 
+## How to run
+
+Cui:
+
+    cargo r
+
+Gui:
+
+    cargo r -p gui
+
+## Example output
+
 It outputs something like:
 
 ```
