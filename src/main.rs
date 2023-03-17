@@ -1,4 +1,4 @@
-use polygon_filler::{fill_polygon, scale, Board, Polygon, Shape, Triangle};
+use polygon_filler::{fill_polygon, measure_time, scale, Board, Polygon, Shape, Triangle};
 
 fn print_board(board: &Board, shape: Shape) {
     for y in 0..shape.1 {
@@ -64,10 +64,4 @@ fn main() {
     if !noprint {
         print_board(&board, shape);
     }
-}
-
-fn measure_time<T>(f: impl FnOnce() -> T) -> (T, f64) {
-    let start = std::time::Instant::now();
-    let ret = f();
-    (ret, start.elapsed().as_secs_f64())
 }

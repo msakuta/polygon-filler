@@ -126,3 +126,9 @@ pub fn fill_polygon(board: &mut Board, shape: Shape, poly: &impl PolygonInterfac
         }
     }
 }
+
+pub fn measure_time<T>(f: impl FnOnce() -> T) -> (T, f64) {
+    let start = std::time::Instant::now();
+    let ret = f();
+    (ret, start.elapsed().as_secs_f64())
+}
