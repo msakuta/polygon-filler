@@ -12,6 +12,22 @@ Gui:
 
     cargo r -p gui
 
+## What?
+
+This is a project to explore a fast algorithm to fill inside of a polygon using scanline algorithm.
+Note that we don't want to use OpenGL or WebGL.
+
+## Why?
+
+Filling inside a polygon sounds an easy task, but if you want to do it as fast as possible, it is not trivial.
+If it was triangle, it can be a little bit simple (GPUs use triangles), but it would require triangulation (converting a polygon into a series of triangles).
+I want to try implementing an algorithm without triangulation and see how fast it can be.
+
+## GUI screencast
+
+![gif animation](https://github.com/msakuta/msakuta.github.io/blob/master/images/showcase/polygon-filler.gif?raw=true)
+
+
 ## Example output
 
 It outputs something like:
