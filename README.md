@@ -23,6 +23,55 @@ Filling inside a polygon sounds an easy task, but if you want to do it as fast a
 If it was triangle, it can be a little bit simple (GPUs use triangles), but it would require triangulation (converting a polygon into a series of triangles).
 I want to try implementing an algorithm without triangulation and see how fast it can be.
 
+## How?
+
+We represent each edge of the polygon in a vector equation:
+
+$$
+\vec{x} = t \vec{d} + \vec{p}_0
+$$
+
+where $\vec{d} = (x_d, y_d)$ represents the direction of the edge, and $\vec{p}_0 = (x_0, y_0)$ reprensets the position of the starting vertex.
+
+The vector equation for the scanline is:
+
+$$
+\vec{x} = s\hat{x} + y\hat{y}
+$$
+
+where $\hat{x}, \hat{y}$ reprensents the unit vectors along each axis, $s$ being the parameter along the x axis, and $y$ being the coordinate along Y axis.
+Be aware that $s$ is the variable along the scanline, while $y$ is fixed.
+
+Rewriting the equations to each of X and Y coordinates:
+
+$$
+\begin{cases}
+s = t x_d + x_0 \\
+y = t y_d + y_0
+\end{cases}
+$$
+
+Solving these equations, we get this:
+
+$$
+\begin{align*}
+s &= \frac{y - y_0}{y_d}x_d + x_0 \\
+t &= \frac{y - y_0}{y_d}
+\end{align*}
+$$
+
+These are mapped to Rust functions like these:
+
+```rust
+fn get_t(y: f64, v: [f64; 2], d: [f64; 2]) -> f64 {
+    (y - v[1]) / d[1]
+}
+
+fn get_s(y: f64, v: [f64; 2], d: [f64; 2]) -> f64 {
+    (y - v[1]) * d[0] / d[1] + v[0]
+}
+```
+
 ## GUI screencast
 
 ![gif animation](https://github.com/msakuta/msakuta.github.io/blob/master/images/showcase/polygon-filler.gif?raw=true)
