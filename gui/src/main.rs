@@ -30,6 +30,7 @@ fn main() {
         mouse_pos: None,
         selected_vertex: None,
         naive: false,
+        fill_time: 0.,
     };
 
     let native_options = eframe::NativeOptions::default();
@@ -58,17 +59,22 @@ struct AppData {
     mouse_pos: Option<Pos2>,
     selected_vertex: Option<usize>,
     naive: bool,
+    fill_time: f64,
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
-        SidePanel::right("side_panel").show(ctx, |ui| {
-            ui.label(format!("mouse: {:?}", self.app_data.mouse_pos));
-            ui.label(format!("vertex: {:?}", self.app_data.selected_vertex));
-            if ui.checkbox(&mut self.app_data.naive, "Naive").changed() {
-                self.img.clear();
-            };
-        });
+        SidePanel::right("side_panel")
+            .resizable(false)
+            .min_width(200.)
+            .show(ctx, |ui| {
+                ui.label(format!("mouse: {:?}", self.app_data.mouse_pos));
+                ui.label(format!("vertex: {:?}", self.app_data.selected_vertex));
+                if ui.checkbox(&mut self.app_data.naive, "Naive").changed() {
+                    self.img.clear();
+                };
+                ui.label(format!("Fill time: {:.06}ms", self.app_data.fill_time));
+            });
 
         CentralPanel::default().show(ctx, |ui| {
             Frame::canvas(ui.style()).show(ui, |ui| {
@@ -142,6 +148,7 @@ impl App {
                     }
                 });
                 println!("Fill triangle time: {}ms", time * 1e3);
+                app_data.fill_time = time * 1e3;
 
                 let image: Vec<_> = app_data
                     .board
