@@ -63,29 +63,24 @@ pub fn scale(poly: &mut impl PolygonInterface, scale: f64) {
     }
 }
 
+/// Get the maximum of an iterator of floating point values, because we can't use `max` method
+/// since floats don't implement `Eq`. It panics when the input iterator is empty.
+fn max_f(it: impl Iterator<Item = f64>) -> f64 {
+    it.reduce(|acc, cur| acc.max(cur)).unwrap()
+}
+
+/// See [`self::max_f`]
+fn min_f(it: impl Iterator<Item = f64>) -> f64 {
+    it.reduce(|acc, cur| acc.min(cur)).unwrap()
+}
+
 pub fn fill_polygon(board: &mut Board, shape: Shape, poly: &impl PolygonInterface, outline: bool) {
     let vertices = poly.vertices();
     let bbox = [
-        vertices
-            .iter()
-            .map(|pos| pos[0])
-            .reduce(|acc, cur| acc.min(cur))
-            .unwrap(),
-        vertices
-            .iter()
-            .map(|pos| pos[1])
-            .reduce(|acc, cur| acc.min(cur))
-            .unwrap(),
-        vertices
-            .iter()
-            .map(|pos| pos[0])
-            .reduce(|acc, cur| acc.max(cur))
-            .unwrap(),
-        vertices
-            .iter()
-            .map(|pos| pos[1])
-            .reduce(|acc, cur| acc.max(cur))
-            .unwrap(),
+        min_f(vertices.iter().map(|pos| pos[0])),
+        min_f(vertices.iter().map(|pos| pos[1])),
+        max_f(vertices.iter().map(|pos| pos[0])),
+        max_f(vertices.iter().map(|pos| pos[1])),
     ];
 
     // println!("bbox: {bbox:?}");
