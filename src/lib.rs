@@ -127,3 +127,45 @@ pub fn measure_time<T>(f: impl FnOnce() -> T) -> (T, f64) {
     let ret = f();
     (ret, start.elapsed().as_secs_f64())
 }
+
+/// Fill the polygon with naive [point in polygon](https://en.wikipedia.org/wiki/Point_in_polygon) algorithm.
+/// It is much slower than [`self::fill_polygon`], but provided as a reference.
+pub fn fill_naive(board: &mut Board, shape: Shape, poly: &impl PolygonInterface) {
+    let vertices = poly.vertices();
+    let bbox = [
+        min_f(vertices.iter().map(|pos| pos[0])),
+        min_f(vertices.iter().map(|pos| pos[1])),
+        max_f(vertices.iter().map(|pos| pos[0])),
+        max_f(vertices.iter().map(|pos| pos[1])),
+    ];
+
+    // println!("bbox: {bbox:?}");
+
+    for y in usize(bbox[1].max(0.))..=usize(bbox[3]).min(shape.1 - 1) {
+        for x in usize(bbox[0].max(0.))..=usize(bbox[2]).min(shape.0 - 1) {
+            let mut intersects = 0;
+            for i in 0..vertices.len() {
+                let i1 = (i + 1) % vertices.len();
+                let d = vecsub(vertices[i1], vertices[i]);
+                if d[1] == 0. {
+                    continue;
+                }
+                let t = get_t(y as f64, vertices[i], normalize(d));
+                // println!("y: {y} t: {t} / {d}", d = length(d));
+                if t < 0. || length(d) < t {
+                    continue;
+                }
+                let s = get_s(y as f64, vertices[i], normalize(d)).round();
+                // println!("    x: {x}");
+                if s < x as f64 {
+                    continue;
+                }
+                intersects += 1;
+            }
+            // println!("intersects: {intersects:?}");
+            if intersects % 2 == 1 {
+                board[x + y * shape.0] = true;
+            }
+        }
+    }
+}

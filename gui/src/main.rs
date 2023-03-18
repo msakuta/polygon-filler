@@ -6,7 +6,7 @@ use eframe::{
     emath,
     epaint::{pos2, Color32, ColorImage, Pos2, Rect, Vec2},
 };
-use polygon_filler::{fill_polygon, measure_time, scale, Board, Polygon, Shape};
+use polygon_filler::{fill_naive, fill_polygon, measure_time, scale, Board, Polygon, Shape};
 
 fn main() {
     let mut poly = Polygon {
@@ -29,6 +29,7 @@ fn main() {
         poly,
         mouse_pos: None,
         selected_vertex: None,
+        naive: false,
     };
 
     let native_options = eframe::NativeOptions::default();
@@ -56,6 +57,7 @@ struct AppData {
     poly: Polygon,
     mouse_pos: Option<Pos2>,
     selected_vertex: Option<usize>,
+    naive: bool,
 }
 
 impl eframe::App for App {
@@ -63,6 +65,9 @@ impl eframe::App for App {
         SidePanel::right("side_panel").show(ctx, |ui| {
             ui.label(format!("mouse: {:?}", self.app_data.mouse_pos));
             ui.label(format!("vertex: {:?}", self.app_data.selected_vertex));
+            if ui.checkbox(&mut self.app_data.naive, "Naive").changed() {
+                self.img.clear();
+            };
         });
 
         CentralPanel::default().show(ctx, |ui| {
@@ -130,7 +135,11 @@ impl App {
             .paint(response, painter, &mut self.app_data, |app_data| {
                 app_data.board.fill(false);
                 let (_, time) = measure_time(|| {
-                    fill_polygon(&mut app_data.board, app_data.shape, &app_data.poly, false)
+                    if app_data.naive {
+                        fill_naive(&mut app_data.board, app_data.shape, &app_data.poly)
+                    } else {
+                        fill_polygon(&mut app_data.board, app_data.shape, &app_data.poly, false)
+                    }
                 });
                 println!("Fill triangle time: {}ms", time * 1e3);
 
@@ -182,6 +191,4 @@ impl App {
             self.app_data.selected_vertex = None;
         }
     }
-
-    fn panel(&mut self) {}
 }
