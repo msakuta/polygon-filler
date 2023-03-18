@@ -42,7 +42,8 @@ $$
 where $\hat{x}, \hat{y}$ reprensents the unit vectors along each axis, $s$ being the parameter along the x axis, and $y$ being the coordinate along Y axis.
 Be aware that $s$ is the variable along the scanline, while $y$ is fixed.
 
-Rewriting the equations to each of X and Y coordinates:
+Now, we want to find out the intersection of the edge and the scanline to get the starting and ending point along the scanline.
+Erasing $\vec{x}$ and rewriting the equations to each of X and Y coordinates:
 
 $$
 \begin{cases}
@@ -71,6 +72,22 @@ fn get_s(y: f64, v: [f64; 2], d: [f64; 2]) -> f64 {
     (y - v[1]) * d[0] / d[1] + v[0]
 }
 ```
+
+Be aware that if $x_d$ was 0, the equation is indeterminate, because the scanline and the edge are parallel.
+It manifests as infinity by dividing by zero.
+However, we can skip that case because it won't contribute to the filling of the polygon anyway.
+Just don't forget to skip the case:
+
+```rust
+if d[0] == 0. {
+    continue;
+}
+```
+
+If the condition $0 < t < l$ holds ($l$ meaning the length of the edge), the intersecting point is on the edge.
+The number of intersections among all edges should be always even number, because the scanline enters and leaves the polygon the same number of times.
+Sometimes floating points do some trick and give us odd number of intersections, but let's ignore it for now.
+Given the even number of intersections, we can fill the inside between $(2n + 1)$-th and $2n$-th intersections to fill concave polygons.
 
 ## GUI screencast
 
