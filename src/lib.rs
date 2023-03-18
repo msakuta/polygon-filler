@@ -85,7 +85,7 @@ pub fn fill_polygon(board: &mut Board, shape: Shape, poly: &impl PolygonInterfac
 
     // println!("bbox: {bbox:?}");
 
-    for y in usize(bbox[1])..=usize(bbox[3]) {
+    for y in usize(bbox[1].max(0.))..=usize(bbox[3]).min(shape.1 - 1) {
         let mut intersects = vec![];
         for i in 0..vertices.len() {
             let i1 = (i + 1) % vertices.len();
@@ -100,11 +100,8 @@ pub fn fill_polygon(board: &mut Board, shape: Shape, poly: &impl PolygonInterfac
             }
             let x = get_s(y as f64, vertices[i], normalize(d)).round();
             // println!("    x: {x}");
-            if x < 0. || shape.0 as f64 <= x {
-                continue;
-            }
-            let x = x as usize;
             if outline {
+                let x = x as usize;
                 board[x + y * shape.0] = true;
             } else if intersects.last() != Some(&x) {
                 intersects.push(x);
@@ -112,9 +109,9 @@ pub fn fill_polygon(board: &mut Board, shape: Shape, poly: &impl PolygonInterfac
         }
         // println!("intersects: {intersects:?}");
         if !intersects.is_empty() {
-            intersects.sort();
+            intersects.sort_by(|a, b| a.partial_cmp(b).unwrap());
             for xs in intersects.chunks_exact(2) {
-                for x in xs[0]..xs[1] {
+                for x in usize(xs[0].max(0.))..=usize(xs[1]).min(shape.0 - 1) {
                     board[x + y * shape.0] = true;
                 }
             }
